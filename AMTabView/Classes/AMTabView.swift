@@ -72,11 +72,13 @@ public class AMTabView: UIView {
   ///
   ///  `unSelectedTabTintColor`: The default color is black.
   ///
-  public static var settings = TabSettings()
+public static var settings = TabSettings()
   ///
   /// A delegate to get notified when the user click on a tab.
   ///
   public weak var delegate: AMTabViewDelegate?
+    
+  var elements: [UIAccessibilityElement] = []
 
   // MARK: Private properties
 
@@ -131,6 +133,11 @@ public class AMTabView: UIView {
     ballLayer.backgroundColor = AMTabView.settings.ballColor.cgColor
     layer.addSublayer(ballLayer)
   }
+    
+  public override var accessibilityElements: [Any]? {
+      get { elements }
+      set { }
+  }
 
   private func addTabsImages() {
     tabsImages
@@ -140,6 +147,7 @@ public class AMTabView: UIView {
         maskLayer.contentsGravity = .resizeAspect
         let layer = CALayer()
         layer.mask = maskLayer
+        layer.accessibilityLabel = element.accessibilityLabel
         imagesLayers.append(layer)
         return layer
     }
@@ -163,13 +171,21 @@ public class AMTabView: UIView {
 
     ballLayer.frame = CGRect(x: 0, y: 0, width: ballSize, height: ballSize)
     ballLayer.cornerRadius = ballSize / 2
+    elements.removeAll()
 
     imagesLayers.enumerated().forEach { offset, element in
       let y = offset == Int(selectedTabIndex) ? 0 : (bounds.height / 2) - (iconSize / 2)
       let x =  (CGFloat(offset) * sectionWidth) + (sectionWidth / 2) - (iconSize / 2)
       element.frame = CGRect(x: x, y: y, width: iconSize, height: iconSize)
       element.mask?.frame = element.bounds
+      let accessibilityElement = UIAccessibilityElement.init(accessibilityContainer: self)
+      accessibilityElement.accessibilityLabel = element.accessibilityLabel
+      accessibilityElement.accessibilityFrameInContainerSpace = element.frame
+      accessibilityElement.accessibilityTraits = .button
+      accessibilityElement.isAccessibilityElement = true
+      elements.append(accessibilityElement)
     }
+      
 
     self.moveToSelectedTab()
   }
